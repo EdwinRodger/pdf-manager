@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Upload & Download</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="bg-white rounded-lg shadow-xl p-8">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">PDF Manager</h1>
+                <p class="text-gray-600">Upload and download PDF files easily</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Upload PDF</h2>
+                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                    <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
+                        <div class="flex flex-col items-center">
+                            <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <label for="fileInput" class="cursor-pointer">
+                                <span class="mt-2 block text-sm font-medium text-gray-700">
+                                    Click to select or drag and drop a PDF file
+                                </span>
+                                <input type="file" id="fileInput" name="file" accept=".pdf" class="hidden">
+                            </label>
+                            <p class="mt-2 text-xs text-gray-500">PDF files only (Max 16MB)</p>
+                        </div>
+                        <div id="fileName" class="text-sm text-gray-600 font-medium hidden"></div>
+                        <button type="button" id="uploadButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                            Upload PDF
+                        </button>
+                    </form>
+                </div>
+                <div id="uploadMessage" class="mt-4"></div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="border-t pt-8">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Download PDF</h2>
+                <form id="downloadForm" class="flex gap-4">
+                    <input 
+                        type="text" 
+                        id="downloadFilename" 
+                        placeholder="Enter filename (e.g., abc123.pdf)" 
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                    >
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+                        Download
+                    </button>
+                </form>
+                <div id="downloadMessage" class="mt-4"></div>
+            </div>
+
+            <!-- Status Section -->
+            <div id="statusSection" class="mt-8 p-4 bg-gray-50 rounded-lg hidden">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Status</h3>
+                <div id="statusContent" class="text-sm text-gray-600"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const dropZone = document.getElementById('dropZone');
+        const fileNameDiv = document.getElementById('fileName');
+        const uploadButton = document.getElementById('uploadButton');
+        const uploadMessage = document.getElementById('uploadMessage');
+        let selectedFile = null;
+
+        // File input change handler
+        fileInput.addEventListener('change', function(e) {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('border-blue-500', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+        });
+
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    handleFileSelect(file);
+                    // Update the file input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                } else {
+                    showMessage(uploadMessage, 'Please select a PDF file', 'error');
+                }
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file) return;
+            
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                showMessage(uploadMessage, 'Please select a PDF file', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            fileNameDiv.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            fileNameDiv.classList.remove('hidden');
+            uploadButton.disabled = false;
+            uploadMessage.innerHTML = '';
+        }
+
+        // Upload button handler
+        uploadButton.addEventListener('click', async function() {
+            if (!selectedFile && !fileInput.files[0]) {
+                showMessage(uploadMessage, 'Please select a file first', 'error');
+                return;
+            }
+
+            const file = selectedFile || fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadButton.disabled = true;
+            uploadButton.textContent = 'Uploading...';
+            uploadMessage.innerHTML = '';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    throw new Error('Invalid response from server');
+                }
+
+                if (response.ok) {
+                    showMessage(uploadMessage, data.message, 'success');
+                    const statusSection = document.getElementById('statusSection');
+                    const statusContent = document.getElementById('statusContent');
+                    statusSection.classList.remove('hidden');
+                    statusContent.innerHTML = `
+                        <p><strong>Filename:</strong> ${data.filename}</p>
+                        <p><strong>Download URL:</strong> <a href="${data.download_url}" class="text-blue-600 hover:underline">${data.download_url}</a></p>
+                    `;
+                    fileInput.value = '';
+                    selectedFile = null;
+                    fileNameDiv.classList.add('hidden');
+                } else {
+                    showMessage(uploadMessage, data.error || 'Upload failed', 'error');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showMessage(uploadMessage, 'Error uploading file: ' + error.message, 'error');
+            } finally {
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload PDF';
+            }
+        });
+
+        // Download form handler
+        document.getElementById('downloadForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const filename = document.getElementById('downloadFilename').value.trim();
+            const downloadMessage = document.getElementById('downloadMessage');
+            
+            if (!filename) {
+                showMessage(downloadMessage, 'Please enter a filename', 'error');
+                return;
+            }
+
+            // Create download link
+            const downloadUrl = `/download/${encodeURIComponent(filename)}`;
+            window.location.href = downloadUrl;
+            
+            // Show message after a delay to check if download started
+            setTimeout(() => {
+                showMessage(downloadMessage, 'Download initiated. If file not found, check the filename.', 'info');
+            }, 500);
+        });
+
+        // Helper function to show messages
+        function showMessage(element, message, type) {
+            const colors = {
+                success: 'bg-green-100 border-green-400 text-green-700',
+                error: 'bg-red-100 border-red-400 text-red-700',
+                info: 'bg-blue-100 border-blue-400 text-blue-700'
+            };
+            
+            element.className = `p-4 rounded-lg border ${colors[type] || colors.info}`;
+            element.textContent = message;
+        }
+    </script>
+</body>
+</html>
+

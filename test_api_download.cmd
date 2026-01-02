@@ -1,0 +1,1 @@
+curl -X GET http://localhost:5000/download/9ex71.pdf --output "aa gayi.pdf"
