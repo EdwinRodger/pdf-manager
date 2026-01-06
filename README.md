@@ -1,49 +1,29 @@
 # PDF Upload & Download Flask App
 
-A simple Flask application for uploading and downloading PDF files with support for both local storage and Amazon S3.
+A simple Flask application for uploading and downloading PDF files with local storage.
 
 ## Features
 
-- Upload PDF files via web interface
+- Upload PDF files via web interface (click or drag-and-drop)
 - Download PDF files by filename
-- Automatic S3 integration when AWS credentials are provided
-- Falls back to local storage when S3 credentials are not available
 - Modern UI with Tailwind CSS
+- Docker support for easy deployment
 
-## Setup
+## Local Development
+
+### Setup
 
 1. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. (Optional) Set up AWS S3 credentials as environment variables:
-```bash
-# Windows (Command Prompt)
-set AWS_ACCESS_KEY_ID=your_access_key
-set AWS_SECRET_ACCESS_KEY=your_secret_key
-set AWS_REGION=us-east-1
-set S3_BUCKET_NAME=your_bucket_name
-
-# Windows (PowerShell)
-$env:AWS_ACCESS_KEY_ID="your_access_key"
-$env:AWS_SECRET_ACCESS_KEY="your_secret_key"
-$env:AWS_REGION="us-east-1"
-$env:S3_BUCKET_NAME="your_bucket_name"
-
-# Linux/Mac
-export AWS_ACCESS_KEY_ID=your_access_key
-export AWS_SECRET_ACCESS_KEY=your_secret_key
-export AWS_REGION=us-east-1
-export S3_BUCKET_NAME=your_bucket_name
-```
-
-3. Run the application:
+2. Run the application:
 ```bash
 python app.py
 ```
 
-4. Open your browser and navigate to `http://localhost:5000`
+3. Open your browser and navigate to `http://localhost:5000`
 
 ## Usage
 
@@ -52,19 +32,13 @@ python app.py
 - **Upload**: 
   - Click to select a PDF file, or drag and drop a PDF file into the upload area
   - Click "Upload PDF" button
-  - The file will be stored either in S3 (if credentials are provided) or locally in the `uploads` folder
+  - Files are stored locally in the `uploads` folder
 - **Download**: Enter the filename (as returned after upload) and click "Download" to retrieve the file.
 
 ### Testing the API
 
-You can test the API directly using one of these methods:
+You can test the API directly using curl:
 
-#### Using Python (test_api.py)
-```bash
-python test_api.py path/to/your/file.pdf
-```
-
-#### Using curl (Linux/Mac/Git Bash)
 ```bash
 # Upload
 curl -X POST -F "file=@path/to/your/file.pdf" http://localhost:5000/upload
@@ -73,25 +47,34 @@ curl -X POST -F "file=@path/to/your/file.pdf" http://localhost:5000/upload
 curl -O -J http://localhost:5000/download/FILENAME
 ```
 
-#### Using PowerShell (Windows)
-```powershell
-# Upload
-$form = @{file = Get-Item "path\to\your\file.pdf"}
-Invoke-RestMethod -Uri "http://localhost:5000/upload" -Method Post -Form $form
+## Docker Deployment
 
-# Download
-Invoke-WebRequest -Uri "http://localhost:5000/download/FILENAME" -OutFile "downloaded_file.pdf"
+### Build and Run Locally
+
+```bash
+# Build the image
+docker build -t pdf-manager .
+
+# Run the container
+docker run -p 3000:3000 -e PORT=3000 pdf-manager
 ```
 
-#### Using test_api.ps1 (Windows PowerShell)
-```powershell
-.\test_api.ps1 path\to\your\file.pdf
-```
+### Deploy to Coolify
 
-## Storage Behavior
+1. Push your code to a Git repository (GitHub, GitLab, etc.)
 
-- If AWS credentials are provided: Files are uploaded to and downloaded from Amazon S3
-- If AWS credentials are not provided: Files are stored locally in the `uploads` folder
+2. In Coolify:
+   - Create a new application
+   - Connect your Git repository
+   - Coolify will automatically detect the Dockerfile
+   - Set the port to `3000` (or use the PORT environment variable)
+   - Deploy!
+
+3. Environment Variables (optional):
+   - `PORT`: Port to run the application (default: 3000)
+   - `FLASK_DEBUG`: Set to `true` for debug mode (default: false)
+
+**Note**: Files uploaded in Coolify will be stored in the container's `uploads` folder. For persistent storage, consider mounting a volume or using a database/file storage service.
 
 ## File Structure
 
@@ -99,11 +82,13 @@ Invoke-WebRequest -Uri "http://localhost:5000/download/FILENAME" -OutFile "downl
 .
 ├── app.py              # Main Flask application
 ├── requirements.txt    # Python dependencies
+├── Dockerfile         # Docker configuration
+├── .dockerignore      # Files to exclude from Docker build
 ├── templates/
 │   └── index.html     # Web interface
-├── uploads/           # Local storage folder (created automatically)
-├── test_api.py        # Python test script for API
-├── test_api.sh        # Bash test script for API (Linux/Mac)
-└── test_api.ps1       # PowerShell test script for API (Windows)
+└── uploads/           # Local storage folder (created automatically)
 ```
 
+## Storage
+
+Files are stored locally in the `uploads` folder. Each uploaded file gets a unique random 5-character filename to prevent conflicts.
