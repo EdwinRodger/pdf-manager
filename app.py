@@ -28,10 +28,32 @@ def save_file_locally(file, filename):
     return file_path
 
 
+def get_pdf_files():
+    """Get all PDF files from uploads directory, sorted alphabetically"""
+    pdf_files = []
+    upload_folder = app.config["UPLOAD_FOLDER"]
+
+    if os.path.exists(upload_folder):
+        for filename in os.listdir(upload_folder):
+            file_path = os.path.join(upload_folder, filename)
+            if os.path.isfile(file_path) and allowed_file(filename):
+                pdf_files.append(filename)
+
+    return sorted(pdf_files)
+
+
 @app.route("/")
 def index():
     """Render the main page"""
-    return render_template("index.html")
+    pdf_files = get_pdf_files()
+    return render_template("index.html", pdf_files=pdf_files)
+
+
+@app.route("/api/pdfs", methods=["GET"])
+def get_pdfs():
+    """API endpoint to get list of PDF files"""
+    pdf_files = get_pdf_files()
+    return jsonify({"pdfs": pdf_files})
 
 
 @app.route("/upload", methods=["POST"])

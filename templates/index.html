@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PDF Upload & Download</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <div class="bg-white rounded-lg shadow-xl p-8">
@@ -18,11 +20,15 @@
             <!-- Upload Section -->
             <div class="mb-8">
                 <h2 class="text-2xl font-semibold text-gray-700 mb-4">Upload PDF</h2>
-                <div id="dropZone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                <div id="dropZone"
+                    class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
                     <form id="uploadForm" enctype="multipart/form-data" class="space-y-4">
                         <div class="flex flex-col items-center">
-                            <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            <svg class="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                </path>
                             </svg>
                             <label for="fileInput" class="cursor-pointer">
                                 <span class="mt-2 block text-sm font-medium text-gray-700">
@@ -33,7 +39,9 @@
                             <p class="mt-2 text-xs text-gray-500">PDF files only (Max 16MB)</p>
                         </div>
                         <div id="fileName" class="text-sm text-gray-600 font-medium hidden"></div>
-                        <button type="button" id="uploadButton" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        <button type="button" id="uploadButton"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            disabled>
                             Upload PDF
                         </button>
                     </form>
@@ -43,20 +51,53 @@
 
             <!-- Download Section -->
             <div class="border-t pt-8">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Download PDF</h2>
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Download PDF by Filename</h2>
                 <form id="downloadForm" class="flex gap-4">
-                    <input 
-                        type="text" 
-                        id="downloadFilename" 
-                        placeholder="Enter filename (e.g., abc123.pdf)" 
+                    <input type="text" id="downloadFilename" placeholder="Enter filename (e.g., abc123.pdf)"
                         class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                    >
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
+                        required>
+                    <button type="submit"
+                        class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors">
                         Download
                     </button>
                 </form>
                 <div id="downloadMessage" class="mt-4"></div>
+            </div>
+
+            <!-- PDF List Section -->
+            <div class="border-t pt-8 mb-8">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Available PDFs</h2>
+                <div id="pdfListContainer" class="space-y-2">
+                    {% if pdf_files %}
+                    {% for pdf_file in pdf_files %}
+                    <div
+                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.414 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            <span class="text-gray-800 font-medium">{{ pdf_file }}</span>
+                        </div>
+                        <a href="/download/{{ pdf_file }}"
+                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
+                            Download
+                        </a>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.414 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        <p>No PDF files uploaded yet</p>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Status Section -->
@@ -76,28 +117,28 @@
         let selectedFile = null;
 
         // File input change handler
-        fileInput.addEventListener('change', function(e) {
+        fileInput.addEventListener('change', function (e) {
             handleFileSelect(e.target.files[0]);
         });
 
         // Drag and drop handlers
-        dropZone.addEventListener('dragover', function(e) {
+        dropZone.addEventListener('dragover', function (e) {
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.add('border-blue-500', 'bg-blue-50');
         });
 
-        dropZone.addEventListener('dragleave', function(e) {
+        dropZone.addEventListener('dragleave', function (e) {
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('border-blue-500', 'bg-blue-50');
         });
 
-        dropZone.addEventListener('drop', function(e) {
+        dropZone.addEventListener('drop', function (e) {
             e.preventDefault();
             e.stopPropagation();
             dropZone.classList.remove('border-blue-500', 'bg-blue-50');
-            
+
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 const file = files[0];
@@ -115,7 +156,7 @@
 
         function handleFileSelect(file) {
             if (!file) return;
-            
+
             if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
                 showMessage(uploadMessage, 'Please select a PDF file', 'error');
                 return;
@@ -129,7 +170,7 @@
         }
 
         // Upload button handler
-        uploadButton.addEventListener('click', async function() {
+        uploadButton.addEventListener('click', async function () {
             if (!selectedFile && !fileInput.files[0]) {
                 showMessage(uploadMessage, 'Please select a file first', 'error');
                 return;
@@ -168,6 +209,8 @@
                     fileInput.value = '';
                     selectedFile = null;
                     fileNameDiv.classList.add('hidden');
+                    // Refresh PDF list after successful upload
+                    loadPdfList();
                 } else {
                     showMessage(uploadMessage, data.error || 'Upload failed', 'error');
                 }
@@ -181,11 +224,11 @@
         });
 
         // Download form handler
-        document.getElementById('downloadForm').addEventListener('submit', function(e) {
+        document.getElementById('downloadForm').addEventListener('submit', function (e) {
             e.preventDefault();
             const filename = document.getElementById('downloadFilename').value.trim();
             const downloadMessage = document.getElementById('downloadMessage');
-            
+
             if (!filename) {
                 showMessage(downloadMessage, 'Please enter a filename', 'error');
                 return;
@@ -194,7 +237,7 @@
             // Create download link
             const downloadUrl = `/download/${encodeURIComponent(filename)}`;
             window.location.href = downloadUrl;
-            
+
             // Show message after a delay to check if download started
             setTimeout(() => {
                 showMessage(downloadMessage, 'Download initiated. If file not found, check the filename.', 'info');
@@ -208,11 +251,47 @@
                 error: 'bg-red-100 border-red-400 text-red-700',
                 info: 'bg-blue-100 border-blue-400 text-blue-700'
             };
-            
+
             element.className = `p-4 rounded-lg border ${colors[type] || colors.info}`;
             element.textContent = message;
         }
+
+        // Function to load and display PDF list
+        async function loadPdfList() {
+            try {
+                const response = await fetch('/api/pdfs');
+                const data = await response.json();
+                const container = document.getElementById('pdfListContainer');
+
+                if (data.pdfs && data.pdfs.length > 0) {
+                    container.innerHTML = data.pdfs.map(pdf => `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.414 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                                <span class="text-gray-800 font-medium">${pdf}</span>
+                            </div>
+                            <a href="/download/${encodeURIComponent(pdf)}" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
+                                Download
+                            </a>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.414 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            <p>No PDF files uploaded yet</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading PDF list:', error);
+            }
+        }
     </script>
 </body>
-</html>
 
+</html>
