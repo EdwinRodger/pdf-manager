@@ -70,24 +70,20 @@ def upload_file():
     if not allowed_file(file.filename):
         return jsonify({"error": "Only PDF files are allowed"}), 400
 
-    # Generate unique filename
+    # Use the original filename, sanitized
     original_filename = secure_filename(file.filename)
-    file_extension = original_filename.rsplit(".", 1)[1].lower()
-    # Generate a random 5-letter filename (using lowercase letters and digits)
-    random_part = "".join(random.choices(string.ascii_lowercase + string.digits, k=5))
-    unique_filename = f"{random_part}.{file_extension}"
 
     try:
-        # Save file to local storage
+        # Save file to local storage with its original name
         file.seek(0)
-        save_file_locally(file, unique_filename)
+        save_file_locally(file, original_filename)
 
         return (
             jsonify(
                 {
                     "message": "File uploaded successfully",
-                    "filename": unique_filename,
-                    "download_url": f"/download/{unique_filename}",
+                    "filename": original_filename,
+                    "download_url": f"/download/{original_filename}",
                 }
             ),
             200,
