@@ -10,9 +10,12 @@ ENV PYTHONUNBUFFERED=1
 ENV FLASK_APP=app.py
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
     gcc \
-    && rm -rf /var/lib/apt/lists/*
+    curl \
+ && rm -rf /var/lib/apt/lists/*
+
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
