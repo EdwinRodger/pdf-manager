@@ -15,7 +15,10 @@ RUN apt-get update \
     gcc \
     curl \
  && rm -rf /var/lib/apt/lists/*
+<<<<<<< HEAD
 
+=======
+>>>>>>> fa6be900f7772f8df3f33da057887d84a2d50c78
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
