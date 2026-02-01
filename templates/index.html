@@ -70,20 +70,32 @@
                 <div id="pdfListContainer" class="space-y-2">
                     {% if pdf_files %}
                     {% for pdf_file in pdf_files %}
-                    <div
-                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center gap-3">
-                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div data-filename="{{ pdf_file }}"
+                        class="pdf-list-item flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.414 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
                                 </path>
                             </svg>
-                            <span class="text-gray-800 font-medium">{{ pdf_file }}</span>
+                            <span class="text-gray-800 font-medium truncate">{{ pdf_file }}</span>
                         </div>
-                        <a href="/download/{{ pdf_file }}"
-                            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
-                            Download
-                        </a>
+                        <div class="flex gap-2 flex-shrink-0">
+                            <a href="/view/{{ pdf_file }}" target="_blank"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm"
+                                onclick="event.stopPropagation()">
+                                View PDF
+                            </a>
+                            <a href="/download/{{ pdf_file }}"
+                                class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm"
+                                onclick="event.stopPropagation()">
+                                Download
+                            </a>
+                            <button type="button" class="delete-pdf bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm"
+                                data-filename="{{ pdf_file }}" onclick="event.stopPropagation()">
+                                Delete
+                            </button>
+                        </div>
                     </div>
                     {% endfor %}
                     {% else %}
@@ -256,6 +268,30 @@
             element.textContent = message;
         }
 
+        // Click on PDF row opens it in a new tab (except when clicking Download/Delete)
+        document.getElementById('pdfListContainer').addEventListener('click', function (e) {
+            const item = e.target.closest('.pdf-list-item');
+            if (item && item.dataset.filename && !e.target.closest('a') && !e.target.closest('.delete-pdf')) {
+                window.open('/view/' + encodeURIComponent(item.dataset.filename), '_blank');
+            }
+        });
+
+        // Delete PDF (delegated)
+        document.getElementById('pdfListContainer').addEventListener('click', async function (e) {
+            const btn = e.target.closest('.delete-pdf');
+            if (!btn || !btn.dataset.filename) return;
+            e.preventDefault();
+            if (!confirm('Delete "' + btn.dataset.filename + '"?')) return;
+            try {
+                const response = await fetch('/delete/' + encodeURIComponent(btn.dataset.filename), { method: 'DELETE' });
+                const data = await response.json();
+                if (response.ok) loadPdfList();
+                else alert(data.error || 'Failed to delete');
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        });
+
         // Function to load and display PDF list
         async function loadPdfList() {
             try {
@@ -265,16 +301,18 @@
 
                 if (data.pdfs && data.pdfs.length > 0) {
                     container.innerHTML = data.pdfs.map(pdf => `
-                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div data-filename="${pdf.replace(/"/g, '&quot;')}" class="pdf-list-item flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <svg class="w-6 h-6 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.414 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                 </svg>
-                                <span class="text-gray-800 font-medium">${pdf}</span>
+                                <span class="text-gray-800 font-medium truncate">${pdf}</span>
                             </div>
-                            <a href="/download/${encodeURIComponent(pdf)}" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm">
-                                Download
-                            </a>
+                            <div class="flex gap-2 flex-shrink-0">
+                                <a href="/view/${encodeURIComponent(pdf)}" target="_blank" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm" onclick="event.stopPropagation()">View PDF</a>
+                                <a href="/download/${encodeURIComponent(pdf)}" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm" onclick="event.stopPropagation()">Download</a>
+                                <button type="button" class="delete-pdf bg-red-600 hover:bg-red-700 text-white font-semibold py-1.5 px-4 rounded-lg transition-colors text-sm" data-filename="${pdf.replace(/"/g, '&quot;')}" onclick="event.stopPropagation()">Delete</button>
+                            </div>
                         </div>
                     `).join('');
                 } else {

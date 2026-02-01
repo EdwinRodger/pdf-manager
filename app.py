@@ -113,6 +113,39 @@ def download_file(filename):
     return jsonify({"error": "File not found"}), 404
 
 
+@app.route("/view/<filename>")
+def view_file(filename):
+    """Serve PDF for inline viewing in browser (e.g. iframe or new tab)"""
+    filename = secure_filename(filename)
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+    if os.path.exists(file_path):
+        return send_file(
+            file_path,
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name=filename,
+        )
+
+    return jsonify({"error": "File not found"}), 404
+
+
+@app.route("/delete/<filename>", methods=["DELETE"])
+def delete_file(filename):
+    """Delete a PDF file"""
+    filename = secure_filename(filename)
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+
+    if not os.path.exists(file_path):
+        return jsonify({"error": "File not found"}), 404
+
+    try:
+        os.remove(file_path)
+        return jsonify({"message": "File deleted successfully", "filename": filename}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
